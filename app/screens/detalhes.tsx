@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Image, ScrollView, Text } from "react-native";
-import styles from "../components/styles";
+import styles from "../../components/styles";
 
 export default function Detalhes() {
   const { nome_p, nome_c, especie, classe, origem, descricao, beneficios, img } =

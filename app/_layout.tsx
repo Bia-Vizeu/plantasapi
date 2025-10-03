@@ -1,43 +1,21 @@
-import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 
 export default function RootLayout() {
   return (
-    <Tabs
+    <Stack
+      initialRouteName="login"
       screenOptions={{
-        tabBarActiveTintColor: "#103517ff",
-        tabBarStyle: { backgroundColor: "#fff" },
-        headerShown: false, 
+        headerShown: false,
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="cadastro"
-        options={{
-          title: "Cadastro",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="plus-square" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="lista"
-        options={{
-          title: "Plantas",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="local-florist" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-    
+      {/* Login screen (first shown) */}
+      <Stack.Screen name="login" options={{ title: "Login" }} />
+
+      {/* Cadastro de usuário (stack) */}
+      <Stack.Screen name="cadastrodeusuario" options={{ title: "Cadastre-se" }} />
+
+      {/* Depois do login, o usuário acessa as screens (pasta app/screens) */}
+      <Stack.Screen name="screens" options={{ headerShown: false }} />
+    </Stack>
   );
 }

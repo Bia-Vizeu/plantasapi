@@ -1,8 +1,8 @@
-import { listarPlanta } from "@/components/api";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
-import styles from "../components/styles";
+import { listarPlanta } from "../../components/api";
+import styles from "../../components/styles";
 
 export default function Lista() {
   const [plantas, setPlantas] = useState<any[]>([]); 
@@ -23,7 +23,7 @@ export default function Lista() {
             style={styles.receitaItem}
             onPress={() =>
               router.push({
-                pathname: "/detalhes",
+                pathname: "/screens/detalhes",
                 params: {
                   nome_p: item.nome_p,
                   nome_c: item.nome_c,

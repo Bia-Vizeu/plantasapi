@@ -1,7 +1,7 @@
 import { criarPlanta } from "@/components/api";
 import React, { useState } from "react";
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity } from "react-native";
-import styles from "../components/styles";
+import styles from "../../components/styles";
 
 export default function CadastroPlanta() {
   const [nomePopular, setNomePopular] = useState("");
