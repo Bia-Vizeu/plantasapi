@@ -1,13 +1,13 @@
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
-export default function RootLayout() {
+export default function ScreensLayout() {
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#103517ff",
         tabBarStyle: { backgroundColor: "#fff" },
-        headerShown: false, 
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -37,7 +37,7 @@ export default function RootLayout() {
           ),
         }}
       />
-    <Tabs.Screen
+      <Tabs.Screen
         name="detalhes"
         options={{
           title: "Detalhes",
@@ -46,9 +46,6 @@ export default function RootLayout() {
           ),
         }}
       />
-   
     </Tabs>
-    
-    
   );
 }

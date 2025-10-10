@@ -3,6 +3,34 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+export async function salvarToken(token: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem("token", token);
+    console.log("Token salvo com sucesso!");
+  } catch (error) {
+    console.error("Erro ao salvar o token:", error);
+  }
+}
+
+export async function obterToken(): Promise<string | null> {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    return token;
+  } catch (error) {
+    console.error("Erro ao obter o token:", error);
+    return null;
+  }
+}
+export async function removerToken(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem("token");
+    console.log("Token removido com sucesso!");
+  } catch (error) {
+    console.error("Erro ao remover o token:", error);
+  }
+}
+
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -21,7 +49,7 @@ export default function Login() {
         // ignore write errors
       }
       // navegar para área autenticada
-  router.replace({ pathname: "/screens" });
+      router.replace({ pathname: "/screens" });
       return;
     } else {
       Alert.alert("Erro", "Email ou senha inválidos!");
@@ -36,9 +64,14 @@ export default function Login() {
     const checkToken = async () => {
       try {
         const t = await AsyncStorage.getItem("token");
-  if (t) router.replace({ pathname: "/screens" });
+        if (t) {
+          console.log("Token encontrado, redirecionando para /screens");
+          router.replace("/screens");
+        } else {
+          console.log("Nenhum token encontrado, mantém na tela de login");
+        }
       } catch (e) {
-        // ignore
+        console.log("Erro ao verificar token:", e);
       }
     };
     checkToken();
@@ -47,13 +80,13 @@ export default function Login() {
   return (
 
     <View style={styles.container}>
-        <Image
+      <Image
         source={require("../assets/images/logo.png")}
         style={{ width: 100, height: 100, marginBottom: 16 }}
         resizeMode="contain"
       />
       <Text style={styles.title}>Login</Text>
-      
+
 
       <TextInput
         style={styles.input}

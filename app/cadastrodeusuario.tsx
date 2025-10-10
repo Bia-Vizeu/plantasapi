@@ -23,8 +23,9 @@ export default function Cadastro() {
   };
 
   const handleVoltarLogin = () => {
-    router.replace({ pathname: "/login" });
-  };
+  router.replace("/"); 
+};
+  
 
   return (
     <View style={styles.container}>
