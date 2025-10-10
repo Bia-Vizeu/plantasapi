@@ -32,6 +32,7 @@ export default function Lista() {
     fetchPlantas();
   }, []);
 
+
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: "center" }]}>
@@ -68,6 +69,7 @@ export default function Lista() {
               })
             }
           >
+
             <Image source={{ uri: item.img }} style={styles.thumbnail} />
             <Text style={styles.title}>{item.nome_p}</Text>
           </TouchableOpacity>

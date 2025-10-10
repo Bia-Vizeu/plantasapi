@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -8,33 +7,40 @@ export default function Cadastro() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const router = useRouter();
+  const api = "https://floralles-api.vercel.app";
 
   const handleCadastro = async () => {
     if (!nome || !email || !senha) {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
-
-    await AsyncStorage.setItem("token", "token_usuario_" + email);
-    await AsyncStorage.setItem("user", JSON.stringify({ nome, email }));
-
-    Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
-    router.replace({ pathname: "/screens" });
+    fetch(api + "/register", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: senha }) })
+      .then(response => response.status )
+      .then(response => {
+        if (response != 200) {
+          Alert.alert("Erro", "Erro ao cadastrar usuário!");
+          return;
+        } else {
+          Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
+          router.replace({ pathname: "/" });
+        }
+      })
+      .catch(err => Alert.alert("Erro", err));
   };
 
   const handleVoltarLogin = () => {
-  router.replace("/"); 
-};
-  
+    router.replace("/");
+  };
+
 
   return (
     <View style={styles.container}>
-         <Image
-                source={require("../assets/images/logo.png")}
-                style={{ width: 100, height: 100, marginBottom: 16 }}
-                resizeMode="contain"
-              />
-            
+      <Image
+        source={require("../assets/images/logo.png")}
+        style={{ width: 100, height: 100, marginBottom: 16 }}
+        resizeMode="contain"
+      />
+
       <Text style={styles.title}>Cadastro</Text>
 
       <TextInput

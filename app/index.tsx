@@ -3,57 +3,32 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-export async function salvarToken(token: string): Promise<void> {
-  try {
-    await AsyncStorage.setItem("token", token);
-    console.log("Token salvo com sucesso!");
-  } catch (error) {
-    console.error("Erro ao salvar o token:", error);
-  }
-}
-
-export async function obterToken(): Promise<string | null> {
-  try {
-    const token = await AsyncStorage.getItem("token");
-    return token;
-  } catch (error) {
-    console.error("Erro ao obter o token:", error);
-    return null;
-  }
-}
-export async function removerToken(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem("token");
-    console.log("Token removido com sucesso!");
-  } catch (error) {
-    console.error("Erro ao remover o token:", error);
-  }
-}
-
-
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const [password, setPassword] = useState("");
+  const api = "https://floralles-api.vercel.app";
   const router = useRouter();
 
   const handleLogin = async () => {
-    if (email === "" || senha === "") {
+    if (email === "" || password === "") {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
 
-    if (senha === "123") {
-      try {
-        await AsyncStorage.setItem("token", "meu_token_falso");
-      } catch (e) {
-        // ignore write errors
-      }
-      // navegar para área autenticada
-      router.replace({ pathname: "/screens" });
-      return;
-    } else {
-      Alert.alert("Erro", "Email ou senha inválidos!");
-    }
+    fetch(api + "/login", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
+      .then(response => response.json())
+      .then(async response => {
+        if (!response.token) {
+          Alert.alert("Erro", "Email ou senha inválidos!");
+          return;
+        } else {
+          await AsyncStorage.setItem("token", response.token);
+          router.replace({ pathname: "/screens" });
+          return;
+        }
+      })
+      .catch(err => console.error(err));
+
   };
 
   const handleCadastro = () => {
@@ -99,8 +74,8 @@ export default function Login() {
       <TextInput
         style={styles.input}
         placeholder="Digite sua senha"
-        value={senha}
-        onChangeText={setSenha}
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
       />
 
