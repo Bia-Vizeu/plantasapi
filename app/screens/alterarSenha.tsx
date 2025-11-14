@@ -29,22 +29,33 @@ export default function AlterarSenha() {
   }, []);
 
   async function alterarSenha() {
-    if (!senhaAtual || !senhaNova || !senhaConfirm) {
+    // valida campos
+    if (!senhaNova || !senhaConfirm) {
       Alert.alert("Erro", "Preencha todos os campos");
       return;
     }
-    if (senhaAtual !== senhaSalva) {
+
+    // se houver senha antiga salva, verifica
+    if (senhaSalva && senhaAtual !== senhaSalva) {
       Alert.alert("Erro", "Senha atual incorreta");
       return;
     }
+
     if (senhaNova !== senhaConfirm) {
       Alert.alert("Erro", "As senhas novas não coincidem");
       return;
     }
 
+    // salva nova senha
     await AsyncStorage.setItem("userPassword", senhaNova);
     Alert.alert("Sucesso", "Senha alterada com sucesso!");
-    router.back(); // retorna para a tela anterior
+
+    // limpa campos
+    setSenhaAtual("");
+    setSenhaNova("");
+    setSenhaConfirm("");
+
+    router.back(); // volta para a tela anterior
   }
 
   return (
@@ -53,13 +64,17 @@ export default function AlterarSenha() {
       <Text style={styles.label}>Email:</Text>
       <Text style={styles.info}>{email}</Text>
 
-      <Text style={styles.label}>Senha Atual:</Text>
-      <TextInput
-        style={styles.input}
-        secureTextEntry
-        value={senhaAtual}
-        onChangeText={setSenhaAtual}
-      />
+      {senhaSalva && (
+        <>
+          <Text style={styles.label}>Senha Atual:</Text>
+          <TextInput
+            style={styles.input}
+            secureTextEntry
+            value={senhaAtual}
+            onChangeText={setSenhaAtual}
+          />
+        </>
+      )}
 
       <Text style={styles.label}>Nova Senha:</Text>
       <TextInput
