@@ -46,6 +46,15 @@ export default function ScreensLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="atualizar"
+        options={{
+          title: "Atualizar",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="edit" size={24} color="black" />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

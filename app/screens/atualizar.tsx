@@ -1,7 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+
+async function getToken() {
+  if (Platform.OS === "web") {
+    return localStorage.getItem("token");
+  } else {
+    return await AsyncStorage.getItem("token");
+  }
+}
 
 export default function AtualizarPlanta() {
   const { id } = useLocalSearchParams();
@@ -30,7 +38,6 @@ export default function AtualizarPlanta() {
       }
 
       const data = await response.json();
-
       setDadosOriginais(data);
 
       setNomePopular(data.nome_p || "");
@@ -56,10 +63,17 @@ export default function AtualizarPlanta() {
 
   const salvarAlteracoes = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
+
+      console.log("TOKEN ENVIADO:", token);
+
+      if (!token) {
+        Alert.alert("Erro", "Token ausente! Faça login novamente.");
+        return;
+      }
 
       if (!dadosOriginais) {
-        Alert.alert("Erro", "Dados originais não foram carregados.");
+        Alert.alert("Erro", "Dados originais não carregados.");
         return;
       }
 
@@ -82,11 +96,18 @@ export default function AtualizarPlanta() {
       const response = await fetch(`https://floralles-api.vercel.app/plantas/${id}`, {
         method: "PUT",
         headers: {
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updatedData),
       });
+
+      console.log("STATUS ATUALIZAÇÃO:", response.status);
+
+      if (response.status === 401) {
+        Alert.alert("Erro", "Token inválido ou expirado. Faça login novamente.");
+        return;
+      }
 
       if (!response.ok) {
         Alert.alert("Erro", "Falha ao atualizar a planta!");
@@ -101,6 +122,7 @@ export default function AtualizarPlanta() {
       console.log(error);
     }
   };
+
 
   const cancelarAlteracoes = () => {
     router.replace("/screens/lista");
