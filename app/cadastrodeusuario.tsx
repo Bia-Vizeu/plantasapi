@@ -14,7 +14,7 @@ export default function Cadastro() {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
-    fetch(api + "/register", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: senha }) })
+    fetch(api + "/register", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({nome, email, password: senha }) })
       .then(response => response.status )
       .then(response => {
         if (response != 200) {

@@ -4,18 +4,19 @@ import React, { useEffect, useState } from "react";
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Login() {
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const api = "https://floralles-api.vercel.app";
   const router = useRouter();
 
   const handleLogin = async () => {
-    if (email === "" || password === "") {
+    if (nome === "" ||email === "" || password === "") {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
 
-    fetch(api + "/login", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
+    fetch(api + "/login", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome, email, password }) })
       .then(response => response.json())
       .then(async response => {
         if (!response.token) {
@@ -61,6 +62,13 @@ export default function Login() {
         resizeMode="contain"
       />
       <Text style={styles.title}>Login</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Digite seu nome"
+        value={nome}
+        onChangeText={setNome}
+      />
 
 
       <TextInput
