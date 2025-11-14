@@ -1,146 +1,156 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import styles from "../../components/styles";
+import {
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-export default function Index() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [nome, setNome] = useState("");
-
+export default function Home() {
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
+  const [profilePic, setProfilePic] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editandoNome, setEditandoNome] = useState(false);
-  const [novoNome, setNovoNome] = useState("");
-
-  async function handleSair() {
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("email");
-    await AsyncStorage.removeItem("nome");
-    router.replace("/");
-  }
+  const [editingName, setEditingName] = useState("");
 
   useEffect(() => {
-    async function carregarDados() {
-      const emailSalvo = await AsyncStorage.getItem("email");
-      const nomeSalvo = await AsyncStorage.getItem("nome");
+    async function loadUser() {
+      const email = await AsyncStorage.getItem("userEmail");
+      const name = await AsyncStorage.getItem("userName");
+      const photo = await AsyncStorage.getItem("profilePic");
 
-      if (emailSalvo) setEmail(emailSalvo);
-      if (nomeSalvo) setNome(nomeSalvo);
+      if (email) setUserEmail(email);
+      if (name) {
+        setUserName(name);
+        setEditingName(name);
+      }
+      if (photo) setProfilePic(photo);
     }
-    carregarDados();
+    loadUser();
   }, []);
 
-  async function salvarNovoNome() {
-    if (novoNome.trim() === "") return;
+  async function selectProfilePhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
 
-    await AsyncStorage.setItem("nome", novoNome);
-    setNome(novoNome);
-    setEditandoNome(false);
+    if (!result.canceled && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      setProfilePic(uri);
+      await AsyncStorage.setItem("profilePic", uri);
+    }
+  }
+
+  async function saveName() {
+    setUserName(editingName);
+    await AsyncStorage.setItem("userName", editingName);
+  }
+
+  async function handleSair() {
+    await AsyncStorage.removeItem("userEmail");
+    await AsyncStorage.removeItem("userName");
+    await AsyncStorage.removeItem("profilePic");
+    // Adicione navegação de logout se usar React Navigation
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={estiloHeader.header}>
+      <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity onPress={selectProfilePhoto}>
+            <Image
+              source={
+                profilePic
+                  ? { uri: profilePic }
+                  : require("../../assets/images/user.png")
+              }
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
           <View>
-            <Text style={estiloHeader.userNome}>{nome}</Text>
-            <Text style={estiloHeader.userEmail}>{email}</Text>
+            <Text style={styles.headerUser}>{userName}</Text>
+            <Text style={styles.headerUser}>{userEmail}</Text>
           </View>
         </View>
 
         <TouchableOpacity
           onPress={() => setModalVisible(true)}
-          style={estiloHeader.botaoPerfil}
+          style={styles.viewProfileButton}
         >
-          <Text style={estiloHeader.textoBotaoPerfil}>Ver Perfil</Text>
+          <Text style={styles.viewProfileText}>Ver Perfil</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.container, { marginTop: 100 }]}>
-        <Image
-          source={require("../../assets/images/logo.png")}
-          style={{ width: 100, height: 100, marginBottom: 16 }}
-          resizeMode="contain"
-        />
+      <ScrollView contentContainerStyle={{ paddingTop: 140 }}>
+        <View style={styles.container}>
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={{ width: 100, height: 100, marginBottom: 16 }}
+            resizeMode="contain"
+          />
 
-        <Text
-          style={{
-            fontSize: 26,
-            fontWeight: "bold",
-            marginBottom: 16,
-            color: "#6B8F71",
-          }}
-        >
-          Bem-vindo à Casa Floralles!
-        </Text>
+          <Text style={styles.title}>Bem-vindo à Casa Floralles!</Text>
+          <Text style={styles.subtitle}>
+            Explore nossas plantas e aprenda como cuidar delas com carinho.
+          </Text>
 
-        <Text
-          style={{
-            fontSize: 18,
-            textAlign: "center",
-            marginHorizontal: 24,
-          }}
-        >
-          Descubra, cadastre e compartilhe suas plantas.
-        </Text>
+          <TouchableOpacity style={styles.button} onPress={handleSair}>
+            <Text style={styles.buttonText}>Sair desse usuário</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
-        <TouchableOpacity style={styles.button} onPress={handleSair}>
-          <Text style={styles.buttonText}>Sair desse usuário</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={estiloModal.fundo}>
-          <View style={estiloModal.modal}>
-            {!editandoNome ? (
-              <>
-                <Text style={estiloModal.nome}>{nome}</Text>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setNovoNome(nome);
-                    setEditandoNome(true);
-                  }}
-                  style={estiloModal.botaoEditar}
-                >
-                  <Text style={estiloModal.txtBotaoEditar}>Editar nome</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <TextInput
-                  value={novoNome}
-                  onChangeText={setNovoNome}
-                  style={estiloModal.input}
-                />
-
-                <TouchableOpacity
-                  style={estiloModal.botaoSalvar}
-                  onPress={salvarNovoNome}
-                >
-                  <Text style={estiloModal.txtSalvar}>Salvar</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            <Text style={estiloModal.email}>{email}</Text>
-
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
             <TouchableOpacity
-              onPress={() => {
-                setModalVisible(false);
-                router.push("/screens/alterarSenha");
-              }}
-              style={estiloModal.botaoAltSenha}
+              onPress={selectProfilePhoto}
+              style={{ alignItems: "center" }}
             >
-              <Text style={estiloModal.txtAltSenha}>Alterar Senha</Text>
+              <Image
+                source={
+                  profilePic
+                    ? { uri: profilePic }
+                    : require("../../assets/images/user.png")
+                }
+                style={styles.modalImage}
+              />
+              <Text style={styles.changePhoto}>
+                {profilePic ? "Alterar foto" : "Adicionar foto"}
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.label}>Nome:</Text>
+            <TextInput
+              value={editingName}
+              onChangeText={setEditingName}
+              style={styles.input}
+            />
+
+            <Text style={styles.label}>Email:</Text>
+            <Text style={styles.infoText}>{userEmail}</Text>
+
+            <TouchableOpacity style={styles.button} onPress={saveName}>
+              <Text style={styles.buttonText}>Salvar Alterações</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={[styles.button, { backgroundColor: "#B22222" }]}
               onPress={() => setModalVisible(false)}
-              style={estiloModal.botaoFechar}
             >
-              <Text style={estiloModal.txtFechar}>Fechar</Text>
+              <Text style={styles.buttonText}>Fechar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -149,104 +159,115 @@ export default function Index() {
   );
 }
 
-const estiloHeader = StyleSheet.create({
+const styles = StyleSheet.create({
   header: {
     position: "absolute",
     top: 0,
     width: "100%",
-    backgroundColor: "#EAF4EC",
-    paddingVertical: 15,
+    height: 120,
+    backgroundColor: "#6B8F71",
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    flexDirection: "row",
+    paddingTop: 40,
     justifyContent: "space-between",
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 8,
+    zIndex: 100,
   },
-  userNome: {
-    color: "#103517",
+  profileImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    marginRight: 12,
+    backgroundColor: "#eaeaea",
+  },
+  headerUser: {
+    color: "#FFF",
     fontWeight: "bold",
     fontSize: 16,
   },
-  userEmail: {
-    color: "#4A5D52",
-    fontSize: 14,
-  },
-  botaoPerfil: {
+  viewProfileButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
     backgroundColor: "#6B8F71",
   },
-  textoBotaoPerfil: {
-    color: "white",
+  viewProfileText: {
+    color: "#FFF",
     fontWeight: "bold",
   },
-});
-
-const estiloModal = StyleSheet.create({
-  fundo: {
+  container: {
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#6B8F71",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 18,
+    textAlign: "center",
+    marginHorizontal: 24,
+    marginBottom: 16,
+  },
+  modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "#00000070",
     justifyContent: "center",
     alignItems: "center",
   },
-  modal: {
+  modalView: {
     width: "85%",
-    backgroundColor: "white",
-    borderRadius: 15,
+    backgroundColor: "#FFF",
     padding: 20,
+    borderRadius: 16,
     alignItems: "center",
   },
-  nome: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#103517",
-    marginBottom: 10,
+  modalImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#eaeaea",
+    marginBottom: 6,
   },
-  email: {
+  changePhoto: {
+    color: "#6B8F71",
+    textAlign: "center",
+    marginBottom: 14,
+  },
+  label: {
+    width: "100%",
     fontSize: 16,
-    color: "#4A5D52",
-    marginBottom: 20,
+    fontWeight: "bold",
+    marginTop: 12,
   },
-  botaoEditar: {
-    backgroundColor: "#6B8F71",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginBottom: 10,
+  infoText: {
+    width: "100%",
+    fontSize: 16,
+    backgroundColor: "#EEE",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 12,
   },
-  txtBotaoEditar: { color: "white", fontWeight: "bold" },
   input: {
-    width: "90%",
-    backgroundColor: "#EAF4EC",
+    width: "100%",
     padding: 10,
-    borderRadius: 10,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#6B8F71",
-  },
-  botaoSalvar: {
-    backgroundColor: "#6B8F71",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  txtSalvar: { color: "white", fontWeight: "bold" },
-  botaoAltSenha: {
-    backgroundColor: "#6B8F71",
-    padding: 10,
-    borderRadius: 10,
+    backgroundColor: "#EEE",
+    borderRadius: 8,
     marginBottom: 12,
   },
-  txtAltSenha: { color: "white", fontWeight: "bold" },
-  botaoFechar: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#103517",
+  button: {
+    width: "100%",
+    padding: 12,
+    backgroundColor: "#6B8F71",
+    borderRadius: 8,
+    marginTop: 8,
   },
-  txtFechar: { color: "#103517", fontWeight: "bold" },
+  buttonText: {
+    textAlign: "center",
+    color: "#FFF",
+    fontWeight: "bold",
+  },
 });
