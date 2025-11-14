@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -13,6 +14,7 @@ import {
 } from "react-native";
 
 export default function Home() {
+  const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [profilePic, setProfilePic] = useState<string | null>(null);
@@ -53,11 +55,20 @@ export default function Home() {
     await AsyncStorage.setItem("userName", editingName);
   }
 
-  async function handleSair() {
-    await AsyncStorage.removeItem("userEmail");
-    await AsyncStorage.removeItem("userName");
-    await AsyncStorage.removeItem("profilePic");
-    // Adicione navegação de logout se usar React Navigation
+ async function handleSair() {
+  await AsyncStorage.removeItem("userEmail");
+  await AsyncStorage.removeItem("userName");
+  await AsyncStorage.removeItem("profilePic");
+  await AsyncStorage.removeItem("token");
+  router.replace("/");
+}
+
+
+
+
+  function handleAlterarSenha() {
+    setModalVisible(false);
+    router.push("/screens/alterarSenha");
   }
 
   return (
@@ -98,7 +109,7 @@ export default function Home() {
 
           <Text style={styles.title}>Bem-vindo à Casa Floralles!</Text>
           <Text style={styles.subtitle}>
-            Explore nossas plantas e aprenda como cuidar delas com carinho.
+            Cadastre, visualize e descubra novas plantas.
           </Text>
 
           <TouchableOpacity style={styles.button} onPress={handleSair}>
@@ -140,10 +151,24 @@ export default function Home() {
             />
 
             <Text style={styles.label}>Email:</Text>
-            <Text style={styles.infoText}>{userEmail}</Text>
+            <TextInput
+              value={userEmail}
+              editable={false}
+              style={[styles.input, { backgroundColor: "#DDD" }]}
+            />
 
-            <TouchableOpacity style={styles.button} onPress={saveName}>
+            <TouchableOpacity
+              style={[styles.button, { marginBottom: 8 }]}
+              onPress={saveName}
+            >
               <Text style={styles.buttonText}>Salvar Alterações</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: "#6B8F71", marginBottom: 8 }]}
+              onPress={handleAlterarSenha}
+            >
+              <Text style={styles.buttonText}>Alterar Senha</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -242,14 +267,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginTop: 12,
-  },
-  infoText: {
-    width: "100%",
-    fontSize: 16,
-    backgroundColor: "#EEE",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
   },
   input: {
     width: "100%",
