@@ -55,6 +55,15 @@ export default function ScreensLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="alterarSenha"
+        options={{
+          title: "Alterar Senha",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="key" size={24} color="black" />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

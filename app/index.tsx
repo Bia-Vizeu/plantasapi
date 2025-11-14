@@ -1,160 +1,143 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Modal, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-export default function Index() {
-  const router = useRouter();
+export default function Login() {
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [nome, setNome] = useState("Usuário");
-  const [modalVisible, setModalVisible] = useState(false);
+  const [password, setPassword] = useState("");
+  const api = "https://floralles-api.vercel.app";
+  const router = useRouter();
 
-  async function carregarDados() {
-    const emailSalvo = await AsyncStorage.getItem("email");
-    const nomeSalvo = await AsyncStorage.getItem("nome");
+  const handleLogin = async () => {
+    if (nome === "" ||email === "" || password === "") {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
 
-    if (emailSalvo) setEmail(emailSalvo);
-    if (nomeSalvo) setNome(nomeSalvo);
-  }
+    fetch(api + "/login", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome, email, password }) })
+      .then(response => response.json())
+      .then(async response => {
+        if (!response.token) {
+          Alert.alert("Erro", "Email ou senha inválidos!");
+          return;
+        } else {
+          await AsyncStorage.setItem("token", response.token);
+          router.replace({ pathname: "/screens" });
+          return;
+        }
+      })
+      .catch(err => console.error(err));
+
+  };
+
+  const handleCadastro = () => {
+    router.push({ pathname: "/cadastrodeusuario" });
+  };
 
   useEffect(() => {
-    carregarDados();
+    const checkToken = async () => {
+      try {
+        const t = await AsyncStorage.getItem("token");
+        if (t) {
+          console.log("Token encontrado, redirecionando para /screens");
+          router.replace("/screens");
+        } else {
+          console.log("Nenhum token encontrado, mantém na tela de login");
+        }
+      } catch (e) {
+        console.log("Erro ao verificar token:", e);
+      }
+    };
+    checkToken();
   }, []);
 
-  async function handleSair() {
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("email");
-    await AsyncStorage.removeItem("nome");
-
-    router.replace({ pathname: "/" });
-  }
-
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff", padding: 20 }}>
 
-      {/* HEADER BONITO */}
-      <View
-        style={{
-          backgroundColor: "#6B8F71",
-          padding: 16,
-          borderRadius: 12,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 20,
-        }}
-      >
-        <View>
-          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>
-            Olá, {nome}
-          </Text>
-          <Text style={{ color: "#e8f5e9", fontSize: 14 }}>{email}</Text>
-        </View>
+    <View style={styles.container}>
+      <Image
+        source={require("../assets/images/logo.png")}
+        style={{ width: 100, height: 100, marginBottom: 16 }}
+        resizeMode="contain"
+      />
+      <Text style={styles.title}>Login</Text>
 
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          style={{
-            backgroundColor: "#fff",
-            paddingVertical: 6,
-            paddingHorizontal: 14,
-            borderRadius: 20,
-          }}
-        >
-          <Text style={{ color: "#6B8F71", fontWeight: "bold" }}>
-            Perfil
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Digite seu nome"
+        value={nome}
+        onChangeText={setNome}
+      />
 
-      <Text style={{ fontSize: 26, fontWeight: "bold", textAlign: "center", color: "#6B8F71", marginBottom: 16 }}>
-        Bem-vindo a Casa Floralles!
-      </Text>
 
-      <Text style={{ fontSize: 18, textAlign: "center", marginHorizontal: 24 }}>
-        Descubra, cadastre e compartilhe suas plantas.
-        Use as abas abaixo para navegar entre cadastro e lista de plantas!
-      </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Digite seu e-mail"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+      />
 
-      <TouchableOpacity
-        style={{
-          marginTop: 40,
-          backgroundColor: "#6B8F71",
-          paddingVertical: 14,
-          borderRadius: 12,
-          alignItems: "center"
-        }}
-        onPress={handleSair}
-      >
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-          Sair desse usuário
-        </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Digite sua senha"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
 
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              width: "80%",
-              backgroundColor: "#fff",
-              padding: 20,
-              borderRadius: 16,
-              elevation: 10,
-            }}
-          >
-            <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
-              Meu Perfil
-            </Text>
-
-            <Text style={{ fontSize: 16, marginBottom: 6 }}>
-              <Text style={{ fontWeight: "bold" }}>Nome: </Text>
-              {nome}
-            </Text>
-
-            <Text style={{ fontSize: 16, marginBottom: 20 }}>
-              <Text style={{ fontWeight: "bold" }}>E-mail: </Text>
-              {email}
-            </Text>
-
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#6B8F71",
-                padding: 12,
-                borderRadius: 10,
-                marginBottom: 12,
-              }}
-              onPress={() => {
-                setModalVisible(false);
-                router.push("/screens/alterarSenha");
-              }}
-            >
-              <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>
-                Alterar senha
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#ccc",
-                padding: 12,
-                borderRadius: 10,
-              }}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={{ textAlign: "center", fontWeight: "bold" }}>
-                Fechar
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
+      <TouchableOpacity onPress={handleCadastro}>
+        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
+      </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 24,
+    color: "#6B8F71",
+  },
+  input: {
+    width: "100%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    backgroundColor: "#fff",
+  },
+  button: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#6B8F71",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  link: {
+    color: "#6B8F71",
+    fontSize: 16,
+  },
+});

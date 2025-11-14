@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Alert,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
@@ -11,141 +12,185 @@ import {
 
 export default function AlterarSenha() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
 
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    async function carregarEmail() {
+      try {
+        const emailSalvo = await AsyncStorage.getItem("email");
+        if (emailSalvo) setEmail(emailSalvo);
+      } catch (e) {
+        console.log("Erro ao carregar email:", e);
+      }
+    }
+    carregarEmail();
+  }, []);
+
   async function handleAlterarSenha() {
     if (!senhaAtual || !novaSenha || !confirmarSenha) {
-      Alert.alert("Erro", "Preencha todos os campos!");
-      return;
-    }
-
-    if (novaSenha.length < 6) {
-      Alert.alert("Erro", "A nova senha deve ter no mínimo 6 caracteres.");
+      Alert.alert("Erro", "Preencha todos os campos.");
       return;
     }
 
     if (novaSenha !== confirmarSenha) {
-      Alert.alert("Erro", "A confirmação não corresponde à nova senha.");
+      Alert.alert("Erro", "A confirmação da senha não confere.");
+      return;
+    }
+
+    if (novaSenha.length < 6) {
+      Alert.alert("Erro", "A nova senha deve ter ao menos 6 caracteres.");
       return;
     }
 
     try {
       setLoading(true);
-
       const token = await AsyncStorage.getItem("token");
 
-      const resposta = await fetch("https://floralles-api.vercel.app/usuarios/alterar-senha", {
+      const response = await fetch("https://floralles-api.vercel.app/alterar-senha", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
+          email,
           senhaAtual,
           novaSenha,
         }),
       });
 
-      const data = await resposta.json();
+      const data = await response.json();
 
-      if (!resposta.ok) {
-        Alert.alert("Erro", data?.erro || "Não foi possível alterar a senha.");
-        setLoading(false);
+      if (!response.ok) {
+        Alert.alert("Erro", data.message || "Não foi possível alterar a senha.");
         return;
       }
 
-      Alert.alert("Sucesso!", "Senha alterada com sucesso!");
-      router.back();
-
-    } catch (error) {
-      Alert.alert("Erro", "Falha na conexão com o servidor.");
+      Alert.alert("Sucesso", "Senha alterada com sucesso!", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Erro", "Falha ao conectar ao servidor.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff", padding: 24 }}>
-      <Text style={{ fontSize: 26, fontWeight: "bold", color: "#6B8F71", marginBottom: 20 }}>
-        Alterar Senha
-      </Text>
+    <View style={styles.container}>
+      {/* Título */}
+      <Text style={styles.title}>Alterar Senha</Text>
 
-      <Text style={{ fontSize: 18, marginBottom: 8 }}>Senha atual</Text>
+      {/* Email do usuário */}
+      <Text style={styles.userText}>Usuário: {email || "—"}</Text>
+
+      {/* Inputs */}
       <TextInput
+        placeholder="Senha atual"
         secureTextEntry
         value={senhaAtual}
         onChangeText={setSenhaAtual}
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          borderRadius: 10,
-          marginBottom: 16,
-        }}
+        style={styles.input}
       />
 
-      <Text style={{ fontSize: 18, marginBottom: 8 }}>Nova senha</Text>
       <TextInput
+        placeholder="Nova senha"
         secureTextEntry
         value={novaSenha}
         onChangeText={setNovaSenha}
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          borderRadius: 10,
-          marginBottom: 16,
-        }}
+        style={styles.input}
       />
 
-      <Text style={{ fontSize: 18, marginBottom: 8 }}>Confirmar nova senha</Text>
       <TextInput
+        placeholder="Confirmar nova senha"
         secureTextEntry
         value={confirmarSenha}
         onChangeText={setConfirmarSenha}
-        style={{
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          borderRadius: 10,
-          marginBottom: 24,
-        }}
+        style={styles.input}
       />
 
+      {/* Botão Confirmar */}
       <TouchableOpacity
+        style={[styles.primaryButton, loading && { opacity: 0.7 }]}
         onPress={handleAlterarSenha}
         disabled={loading}
-        style={{
-          backgroundColor: "#6B8F71",
-          padding: 14,
-          borderRadius: 12,
-          alignItems: "center",
-          opacity: loading ? 0.6 : 1,
-        }}
       >
-        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>
-          {loading ? "Atualizando..." : "Alterar Senha"}
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Atualizando..." : "Confirmar"}
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => router.back()}
-        style={{
-          marginTop: 18,
-          padding: 14,
-          borderRadius: 12,
-          alignItems: "center",
-          backgroundColor: "#ccc",
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-          Cancelar
-        </Text>
+      {/* Botão Voltar */}
+      <TouchableOpacity style={styles.secondaryButton} onPress={() => router.back()}>
+        <Text style={styles.secondaryButtonText}>Voltar</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    padding: 20,
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#6B8F71",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  userText: {
+    fontSize: 16,
+    color: "#103517",
+    marginBottom: 18,
+    textAlign: "center",
+  },
+  input: {
+    width: "100%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    marginBottom: 12,
+  },
+  primaryButton: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#6B8F71",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  primaryButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  secondaryButton: {
+    width: "100%",
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#6B8F71",
+    marginTop: 12,
+  },
+  secondaryButtonText: {
+    color: "#6B8F71",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
